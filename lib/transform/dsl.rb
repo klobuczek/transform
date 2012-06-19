@@ -12,8 +12,8 @@ module Transform
       # fields - names of fields
       # e.g.
       # load "sale.csv", :sale, :currentQuantityBUM, :currentSpend, :currentGP, :baselineIUMperBUM, :baselinePriceBUM, :marginCost, :material_id
-      def load_collection collection_name, filename, *fields
-        @@graph.add(collection_name, filename, operation: :load_collection, fields: fields)
+      def define_collection collection_name, *fields
+        @@graph.add(collection_name, [], operation: :define_collection, fields: fields)
       end
 
       # perform calculation on a tuple instance returning a single value (or tuple of size one) per tuple instance
@@ -22,8 +22,8 @@ module Transform
       # block - block returning the result per row
       # e.g.
       # calculate(:suggested_discount_price, :sale)  { |sale| sale.baselinePriceBUM.divide(sale.baselineIUMperBUM) }
-      def calculate new_collection, collection, &block
-        @@graph.add(new_collection, collection, operation: :calculate, &block)
+      def calculate new_collection, collection, *fields, &block
+        @@graph.add(new_collection, collection, operation: :calculate, fields: fields, &block)
       end
 
       # combine 2 or more collections into one
@@ -43,7 +43,7 @@ module Transform
       # e.g.
       # slice :mini_sale, :sale, :currentSpend, :currentGP
       def slice new_collection, collection, *fields
-        @@graph.add(new_collection, collections, operation: :slice)
+        @@graph.add(new_collection, collection, operation: :slice, fields: fields)
       end
 
       # filter the collection to rows complying with condition
@@ -53,7 +53,7 @@ module Transform
       # e.g.
       # filter(:filtered_tuple, :tuple) {|row| row.amount > 1}
       def filter new_collection, collection, &block
-        @@graph.add(new_collection, collections, operation: :filter, &block)
+        @@graph.add(new_collection, collection, operation: :filter, &block)
       end
 
       # aggreagate over all tuple instances
@@ -63,8 +63,8 @@ module Transform
       # block - inject type block that is called for every row in the collection
       # e.g.
       # aggregate :adjusted_impact, :suggested_discount_price, 0, {|sum, sdp| sum+=sdp }
-      def aggregate new_collection, collection, initial_value, &block
-
+      def aggregate new_collection, collection, initial_value, *fields, &block
+        @@graph.add(new_collection, collection, initial_value: initial_value, operation: :aggregate, fields: fields, &block)
       end
 
       # store a tuple to a csv file
@@ -72,8 +72,8 @@ module Transform
       # filename - name of file to store the collection in
       # e.g.
       # store :tuple1, "tuple1.csv"
-      def store collection, filename
-        @@graph.add(collection, filename, operation: :store)
+      def store collection
+        @@graph.store collection
       end
 
       def draw(&block)

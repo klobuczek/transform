@@ -2,9 +2,10 @@ require "transform/version"
 #require "transform/application"
 
 module Transform
-  puts "In transform"
   autoload :Application, 'transform/application'
   autoload :Graph, 'transform/graph'
   autoload :Dsl, 'transform/dsl'
   autoload :Node, 'transform/node'
+  autoload :Table, 'transform/table'
+  autoload :Row, 'transform/row'
 end

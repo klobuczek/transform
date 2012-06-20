@@ -1,5 +1,4 @@
 require "transform/version"
-#require "transform/application"
 
 module Transform
   autoload :Application, 'transform/application'

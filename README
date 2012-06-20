@@ -1,0 +1,16 @@
+Getting started.
+
+Install the gem or run from source:
+rake build
+rake install
+
+Run the transformer with:
+tnf <script_name>
+
+An example script and input file are located in the sample directory:
+cd sample
+tnf script
+
+This should create the result and all intermediate files b.csv through f.csv.
+
+A documentation of the DSL API can be found in lib/transform/dsl.rb.

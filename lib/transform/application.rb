@@ -1,8 +1,8 @@
 module Transform
   class Application
     def self.run! *args
-      require "transform/script"
-      Transform::Dsl.graph.store :a
+      $LOAD_PATH.unshift File.new('.')
+      require args.first
       return 0
     end
   end

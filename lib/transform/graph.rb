@@ -16,9 +16,6 @@ module Transform
     end
 
     def find(collection)
-      #puts nodes.inspect
-      #puts "trying to find #{collection.inspect}"
-      #raise unless collection.is_a? Symbol
       nodes.detect { |node| node.name == collection }
     end
 

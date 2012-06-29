@@ -36,9 +36,9 @@ module Transform
       self.data = []
       dependencies.last.load
       dependencies.first.with_data do |rows1|
-        rows1.each do |row1|
-          dependencies.last.data.each do |row2|
-            data << Row.new(row1.raw + row2.raw, fields) if block.nil? || block.call(row1, row2)
+        rows1.each_with_index do |row1, index1|
+          dependencies.last.data.each_with_index do |row2, index2|
+            data << Row.new(row1.raw + row2.raw, fields) if (block.nil? ? index1 == index2 : block.call(row1, row2))
           end
         end
       end

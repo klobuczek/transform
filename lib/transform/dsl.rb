@@ -67,6 +67,24 @@ module Transform
         @@graph.add(new_collection, collection, initial_value: initial_value, operation: :aggregate, fields: fields, &block)
       end
 
+      # group tuples by one or more fields
+      # options:
+      #   id_fields:
+      #   computations:
+      def group new_collection, collection, options
+        @@graph.add(new_collection, collection, options.merge(operation: :group))
+      end
+
+      # generate simple collection
+      # new_collection
+      def generate(new_collection, field, count=1, &block)
+        @@graph.add(new_collection, [], operation: :generate, fields: [field], count: count, &block)
+      end
+
+      def project(new_collection, collection, options)
+        @@graph.add(new_collection, [collection], options.merge(operation: :project))
+      end
+
       # store a tuple to a csv file
       # collection - name of the collection to be stored
       # filename - name of file to store the collection in

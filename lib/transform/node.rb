@@ -8,13 +8,31 @@ module Transform
       self.name = name
       self.dependencies = dependencies
       self.file = options.delete(:file)
-      self.fields = options.delete(:fields)
       self.options = options
       self.block = block
+      assign_fields
+    end
+
+    def assign_fields
+      self.fields =
+          case options[:operation]
+            when :project
+              dependencies.first.fields + except(options, :operation).keys
+            when :compose
+              dependencies.first.fields + dependencies.last.fields
+            when :filter
+              dependencies.first.fields
+            else
+              options.delete(:fields)
+          end
+    end
+
+    def except(hash, key)
+      hash.dup.tap { |h| h.delete key }
     end
 
     def execute
-      send options[:operation], &block unless file
+      send options.delete(:operation), &block unless file
     end
 
     def define_collection
@@ -32,7 +50,7 @@ module Transform
     end
 
     def compose
-      self.fields = dependencies.first.fields + dependencies.last.fields
+      #self.fields = dependencies.first.fields + dependencies.last.fields
       self.data = []
       dependencies.last.load
       dependencies.first.with_data do |rows1|
@@ -59,7 +77,6 @@ module Transform
     end
 
     def filter
-      self.fields = dependencies.first.fields
       self.data = []
       dependencies.first.with_data do |rows|
         rows.each do |row|
@@ -73,11 +90,51 @@ module Transform
       self.data = []
       aggregate_value = nil
       dependencies.first.with_data do |rows|
-        aggregate_value = rows.inject(options[:initial_value]) do |agg, row|
-          block.call(agg, row)
-        end
+        aggregate_value = rows.inject(options[:initial_value], &block)
       end
       self.data = [Row.new([aggregate_value], fields)]
+      save
+    end
+
+    def group
+      groups = {}
+      initial_values = options[:computations].keys.map { |key| [0, options[:computations][key]] }
+      dependencies.first.with_data do |rows|
+        rows.each do |row|
+          ids = fields.map { |field| row.send field }
+          groups[ids] ||= initial_values
+          groups[ids] = group[ids].map do |agg, block|
+            block.call(agg, row)
+          end
+        end
+      end
+      self.data = groups.map do |key, value|
+        Row.new(key + value.map { |agg, block| agg }, fields + options[:computations].keys)
+      end
+      save
+    end
+
+    def project
+      self.data = []
+      dependencies.first.with_data do |rows|
+        previous = nil
+        rows.each do |row|
+          def row.previous
+            previous
+          end
+
+          data << Row.new(options.values.inject(row) { |row, block| row.add block.call(row) }.raw, fields)
+          previous = data.last
+        end
+      end
+      save
+    end
+
+    def generate
+      self.data=
+          (0..(options[:count]-1)).to_a.map do |index|
+            Row.new([block.call(index)], fields)
+          end
       save
     end
 

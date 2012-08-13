@@ -7,7 +7,7 @@ module Transform
     def initialize(name, dependencies, options, &block)
       self.name = name
       self.dependencies = dependencies
-      self.file = options.delete(:file)
+      self.file = "#{name}.csv"
       self.options = options
       self.block = block
       assign_fields
@@ -32,26 +32,24 @@ module Transform
     end
 
     def execute
-      send options.delete(:operation), &block unless file
+      create_data do
+        send options.delete(:operation), &block
+      end unless cached? || options[:operation] == :define_collection
     end
 
-    def define_collection
-      self.file = "#{name}.csv"
+    def cached?
+      !$OPTS[:no_cache] && File.exist?(file)
     end
 
     def calculate
-      self.data = []
       dependencies.first.with_data do |rows|
         rows.each do |row|
           data << Row.new([block.call(row)], fields)
         end
       end
-      save
     end
 
     def compose
-      #self.fields = dependencies.first.fields + dependencies.last.fields
-      self.data = []
       dependencies.last.load
       dependencies.first.with_data do |rows1|
         rows1.each_with_index do |row1, index1|
@@ -61,11 +59,9 @@ module Transform
         end
       end
       dependencies.last.unload
-      save
     end
 
     def slice
-      self.data = []
       dependencies.first.with_data do |rows|
         rows.each do |row|
           new_row = []
@@ -73,27 +69,22 @@ module Transform
           data << Row.new(new_row, fields)
         end
       end
-      save
     end
 
     def filter
-      self.data = []
       dependencies.first.with_data do |rows|
         rows.each do |row|
           data << row if block.call(row)
         end
       end
-      save
     end
 
     def aggregate
-      self.data = []
       aggregate_value = nil
       dependencies.first.with_data do |rows|
         aggregate_value = rows.inject(options[:initial_value], &block)
       end
       self.data = [Row.new([aggregate_value], fields)]
-      save
     end
 
     def group
@@ -111,11 +102,9 @@ module Transform
       self.data = groups.map do |key, value|
         Row.new(key + value.map { |agg, block| agg }, fields + options[:computations].keys)
       end
-      save
     end
 
     def project
-      self.data = []
       dependencies.first.with_data do |rows|
         previous = nil
         rows.each do |row|
@@ -127,7 +116,6 @@ module Transform
           previous = data.last
         end
       end
-      save
     end
 
     def generate
@@ -135,7 +123,6 @@ module Transform
           (0..(options[:count]-1)).to_a.map do |index|
             Row.new([block.call(index)], fields)
           end
-      save
     end
 
     def load
@@ -147,21 +134,24 @@ module Transform
       self.data = nil
     end
 
+    def with_data
+      load
+      yield data
+      unload
+    end
+
     def save
-      load unless data
-      self.file = "#{name}.csv" unless file
       File.open(file, 'w') do |f|
         data.each do |row|
           f.puts row.to_s
         end
       end
-      unload
     end
 
-    def with_data
-      load
-      yield data
-      save unless file
+    def create_data
+      self.data = []
+      yield
+      save
       unload
     end
   end

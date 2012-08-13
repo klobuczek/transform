@@ -25,7 +25,6 @@ module Transform
 
     def store collection
       execute collection
-      find(collection).save
     end
   end
 end

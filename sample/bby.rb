@@ -1,6 +1,10 @@
 Transform::Dsl.draw do
   define_collection :Denorm_UPC_Nonzero_sls,
-                    :UPC_NBR, :WEEK_ID, :FS_SUB_CATEGORY_ID, :FS_SALES_DLRS, :FS_COSTS_DLRS, :FS_PROMO_SALES_DLRS, :FS_VENDOR_FUNDING_DLRS, :FS_SALES_UNITS, :FS_PROMO_SALES_UNITS, :FS_NBR_TRANSACTIONS, :FS_AVG_BASKET_SIZE, :FS_UNADJUSTED_MARGIN_DLRS, :FS_Lifecycle_stage, :DP_PROMO_FLAG, :DC_WEEK_NUM, :DC_YEAR_NUM, :DC_WEEK_DATE, :DC_AD_WEEK, :DS_SUB_CATEGORY_ID, :DS_SEASONALITY_INDEX, :FN_start_sale_week, :FN_end_sale_week, :ADJ_SALES_DLRS
+                    :UPC_NBR, :WEEK_ID, :FS_SUB_CATEGORY_ID, :FS_SALES_DLRS, :FS_COSTS_DLRS, :FS_PROMO_SALES_DLRS,
+                    :FS_VENDOR_FUNDING_DLRS, :FS_SALES_UNITS, :FS_PROMO_SALES_UNITS, :FS_NBR_TRANSACTIONS,
+                    :FS_AVG_BASKET_SIZE, :FS_UNADJUSTED_MARGIN_DLRS, :FS_Lifecycle_stage, :DP_PROMO_FLAG,
+                    :DC_WEEK_NUM, :DC_YEAR_NUM, :DC_WEEK_DATE, :DC_AD_WEEK, :DS_SUB_CATEGORY_ID, :DS_SEASONALITY_INDEX,
+                    :FN_start_sale_week, :FN_end_sale_week, :ADJ_SALES_DLRS
   define_collection :MARKET_SHARE, :FS_SUB_CATEGORY_ID, :ADJUSTMENT_FACTOR
   filter(:evaluation_period, :Denorm_UPC_Nonzero_sls) do |sale|
     sale.UPC_NBR.to_i == 28 && (sale.DC_WEEK_NUM.to_i-20).abs <= 8

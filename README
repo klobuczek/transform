@@ -14,3 +14,5 @@ tnf script
 This should create the result and all intermediate files b.csv through f.csv.
 
 A documentation of the DSL API can be found in lib/transform/dsl.rb.
+
+The doc directory contains presentation slides about the framework.
